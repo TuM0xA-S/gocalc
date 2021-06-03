@@ -1,4 +1,4 @@
-package gorpn
+package gocalc
 
 import "errors"
 

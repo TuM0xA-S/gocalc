@@ -1,4 +1,4 @@
-package gorpn
+package gocalc
 
 // CalculateExpression calculates expression in infix notation represented with string
 func CalculateExpression(expr string) (float64, error) {

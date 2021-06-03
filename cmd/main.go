@@ -3,8 +3,9 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"gorpn"
 	"os"
+
+	"github.com/TuM0xA-S/gocalc"
 )
 
 func main() {
@@ -15,7 +16,7 @@ func main() {
 			break
 		}
 		expr := scn.Text()
-		res, err := gorpn.CalculateExpression(expr)
+		res, err := gocalc.CalculateExpression(expr)
 		if err != nil {
 			fmt.Println("error:", err)
 		} else {

@@ -1,4 +1,4 @@
-module gorpn
+module github.com/TuM0xA-S/gocalc
 
 go 1.16
 
