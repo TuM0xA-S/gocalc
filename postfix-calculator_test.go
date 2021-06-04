@@ -7,6 +7,12 @@ import (
 )
 
 func TestCalculatePostfix(t *testing.T) {
+	var ir = &Interpreter{
+		vars: map[string]float64{
+			"x": 5,
+			"y": 10.5,
+		},
+	}
 	type test struct {
 		input  []*Token
 		answer float64
@@ -43,11 +49,17 @@ func TestCalculatePostfix(t *testing.T) {
 			},
 			answer: 125,
 		},
+		{
+			input: []*Token{
+				Var("y"), Num(0.5), Op("-"), Num(2), Op("/"), Num(2), Num(3), Op("+"), Op("*"), Num(25), Var("x"), Op("/"), Op("*"),
+			},
+			answer: 125,
+		},
 	}
 
 	ass := assert.New(t)
 	for _, test := range tests {
-		actualAnswer, err := CalculatePostfix(test.input)
+		actualAnswer, err := ir.calculatePostfix(test.input)
 		ass.NoError(err)
 		ass.Equal(test.answer, actualAnswer)
 	}

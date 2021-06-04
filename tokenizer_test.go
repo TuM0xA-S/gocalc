@@ -150,21 +150,54 @@ func TestTokenizer(t *testing.T) {
 				Op("/"), Num(1), Op("+"), Num(-1), Op("-"), Op("("), Num(1), Op(")"),
 			},
 		},
+		{
+			expr: "a + b",
+			expected: []*Token{
+				Var("a"), Op("+"), Var("b"),
+			},
+		},
+		{
+			expr: "2*a + 231/b",
+			expected: []*Token{
+				Num(2), Op("*"), Var("a"), Op("+"), Num(231), Op("/"), Var("b"),
+			},
+		},
+		{
+			expr: "b2*a",
+			expected: []*Token{
+				Var("b2"), Op("*"), Var("a"),
+			},
+		},
+		{
+			expr: "(2*ab2) + ((Hello) - Foo *(world - 2) ",
+			expected: []*Token{
+				Op("("), Num(2), Op("*"), Var("ab2"), Op(")"),
+				Op("+"),
+				Op("("), Op("("), Var("Hello"), Op(")"),
+				Op("-"),
+				Var("Foo"), Op("*"), Op("("), Var("world"), Op("-"), Num(2), Op(")"),
+			},
+		},
+		{
+			expr: "a = 2 + 2",
+			expected: []*Token{
+				Var("a"), Op("="), Num(2), Op("+"), Num(2),
+			},
+		},
+		{
+			expr: "a=2 + 2",
+			expected: []*Token{
+				Var("a"), Op("="), Num(2), Op("+"), Num(2),
+			},
+		},
 	}
 
 	for _, test := range tests {
 		ok := true
 		tokenizer := NewStringTokenizer(test.expr)
 
-		actual := []*Token{}
-		for {
-			token, err := tokenizer.NextToken()
-			if err == EOF {
-				break
-			}
-			ass.NoError(err)
-			actual = append(actual, token)
-		}
+		actual, err := tokenizer.Tokens()
+		ass.NoError(err)
 		if !ass.Equal(len(test.expected), len(actual), "fail length: %v", test.expr) {
 			continue
 		}
@@ -186,6 +219,10 @@ func TestTokenizer(t *testing.T) {
 			}
 
 			if !ass.Equal(tokExp.Operator, tokAct.Operator) {
+				break
+			}
+
+			if !ass.Equal(tokExp.Variable, tokAct.Variable) {
 				break
 			}
 			ok = true

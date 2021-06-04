@@ -7,6 +7,7 @@ import (
 )
 
 func TestInfixToPostfix(t *testing.T) {
+	var ir = &Interpreter{}
 	type test struct {
 		input  []*Token
 		output []*Token
@@ -56,6 +57,14 @@ func TestInfixToPostfix(t *testing.T) {
 		},
 		{
 			input: []*Token{
+				Var("x"), Op("-"), Op("("), Num(10), Op("-"), Var("y"), Op(")"),
+			},
+			output: []*Token{
+				Var("x"), Num(10), Var("y"), Op("-"), Op("-"),
+			},
+		},
+		{
+			input: []*Token{
 				Op("("), Num(2), Op("+"), Num(3), Op(")"),
 				Op("*"),
 				Op("("), Num(10), Op("-"), Num(5), Op(")"),
@@ -80,21 +89,22 @@ func TestInfixToPostfix(t *testing.T) {
 		},
 		{
 			input: []*Token{
-				Op("("), Num(2), Op(")"), Op("*"), Num(3), Op("*"), Num(4),
+				Op("("), Num(2), Op(")"), Op("*"), Var("abc"), Op("*"), Num(4),
 			},
 			output: []*Token{
-				Num(2), Num(3), Op("*"), Num(4), Op("*"),
+				Num(2), Var("abc"), Op("*"), Num(4), Op("*"),
 			},
 		},
 	}
 	for _, test := range tests {
-		actualOutput, err := InfixToPostfix(test.input)
+		actualOutput, err := ir.infixToPostfix(test.input)
 		ass.NoError(err)
 		ass.Equal(test.output, actualOutput)
 	}
 }
 
 func TestInfixToPostfixErrors(t *testing.T) {
+	var ir = &Interpreter{}
 	type test struct {
 		input []*Token
 	}
@@ -124,7 +134,7 @@ func TestInfixToPostfixErrors(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		_, err := InfixToPostfix(test.input)
+		_, err := ir.infixToPostfix(test.input)
 		ass.Error(err)
 	}
 

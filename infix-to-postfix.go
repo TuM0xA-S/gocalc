@@ -12,13 +12,13 @@ var opPriority = map[string]int{
 	")": 3,
 }
 
-// InfixToPostfix converts infix notation to reverse polish notation
-func InfixToPostfix(input []*Token) ([]*Token, error) {
+// infixToPostfix converts infix notation to reverse polish notation
+func (ir *Interpreter) infixToPostfix(input []*Token) ([]*Token, error) {
 	output := make([]*Token, 0, len(input))
 	stack := []*Token{}
 	for _, tok := range input {
 		switch tok.Type {
-		case TokenNumber:
+		case TokenNumber, TokenVariable:
 			output = append(output, tok)
 		case TokenOperator:
 			if tok.Operator == "(" {
@@ -48,7 +48,7 @@ func InfixToPostfix(input []*Token) ([]*Token, error) {
 			}
 			stack = append(stack, tok)
 		default:
-			panic("unknown token type")
+			return nil, errors.New("unknown token type")
 		}
 	}
 

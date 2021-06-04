@@ -8,6 +8,7 @@ import (
 )
 
 func TestCalculateExpression(t *testing.T) {
+	var ir = &Interpreter{}
 	ass := assert.New(t)
 
 	tests := []struct {
@@ -24,7 +25,8 @@ func TestCalculateExpression(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		actualAns, err := CalculateExpression(test.expr)
+		tokens, _ := NewStringTokenizer(test.expr).Tokens()
+		actualAns, err := ir.calculateExpression(tokens)
 		ass.NoError(err)
 		ass.True(math.Abs(actualAns-test.ans) < 2e-14, "%exp=v act=%v", test.ans, actualAns)
 	}

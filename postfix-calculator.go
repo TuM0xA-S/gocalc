@@ -1,9 +1,12 @@
 package gocalc
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
-// CalculatePostfix calculates expression in postfix notation
-func CalculatePostfix(input []*Token) (float64, error) {
+// calculatePostfix calculates expression in postfix notation
+func (ir *Interpreter) calculatePostfix(input []*Token) (float64, error) {
 	if len(input) == 0 {
 		return 0, errors.New("nothing to calculate")
 	}
@@ -15,8 +18,16 @@ func CalculatePostfix(input []*Token) (float64, error) {
 			continue
 		}
 
+		if tok.Type == TokenVariable {
+			val, ok := ir.vars[tok.Variable]
+			if !ok {
+				return 0, fmt.Errorf("unknow variable: %v", tok.Variable)
+			}
+			stack = append(stack, val)
+			continue
+		}
 		if tok.Type != TokenOperator {
-			panic("unknown token type")
+			return 0, errors.New("unknown token type")
 		}
 
 		if len(stack) < 2 {
@@ -35,7 +46,7 @@ func CalculatePostfix(input []*Token) (float64, error) {
 		case "/":
 			stack = append(stack, a/b)
 		default:
-			panic("unknown operator")
+			return 0, errors.New("unknown operator")
 		}
 	}
 
