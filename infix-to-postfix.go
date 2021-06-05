@@ -1,15 +1,24 @@
 package gocalc
 
-import "errors"
+import (
+	"errors"
+	"strings"
+)
 
 //opPriority = Supported operators with priority
 var opPriority = map[string]int{
-	"+": 1,
-	"-": 1,
-	"*": 2,
-	"/": 2,
-	"(": 3,
-	")": 3,
+	"+":  1,
+	"-":  1,
+	"*":  2,
+	"/":  2,
+	"(":  3,
+	")":  3,
+	"u+": 4,
+	"u-": 4,
+}
+
+func isUnary(tok *Token) bool {
+	return strings.HasPrefix(tok.Operator, "u")
 }
 
 // infixToPostfix converts infix notation to reverse polish notation
@@ -39,12 +48,14 @@ func (ir *Interpreter) infixToPostfix(input []*Token) ([]*Token, error) {
 				}
 				break
 			}
-			for len(stack) > 0 && stack[len(stack)-1].Operator != "(" &&
-				opPriority[tok.Operator] <= opPriority[stack[len(stack)-1].Operator] {
+			if !isUnary(tok) {
+				for len(stack) > 0 && stack[len(stack)-1].Operator != "(" &&
+					opPriority[tok.Operator] <= opPriority[stack[len(stack)-1].Operator] {
 
-				op := stack[len(stack)-1]
-				stack = stack[:len(stack)-1]
-				output = append(output, op)
+					op := stack[len(stack)-1]
+					stack = stack[:len(stack)-1]
+					output = append(output, op)
+				}
 			}
 			stack = append(stack, tok)
 		default:

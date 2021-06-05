@@ -29,7 +29,15 @@ func (ir *Interpreter) calculatePostfix(input []*Token) (float64, error) {
 		if tok.Type != TokenOperator {
 			return 0, errors.New("unknown token type")
 		}
-
+		if isUnary(tok) {
+			if len(stack) < 1 {
+				return 0, errors.New("not enough operands")
+			}
+			if tok.Operator == "u-" {
+				stack[len(stack)-1] *= -1
+			}
+			continue
+		}
 		if len(stack) < 2 {
 			return 0, errors.New("not enough operands")
 		}

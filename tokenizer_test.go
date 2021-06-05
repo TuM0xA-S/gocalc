@@ -34,35 +34,20 @@ func TestTokenizer(t *testing.T) {
 		{
 			expr: "-2 * -32.2",
 			expected: []*Token{
-				{
-					Type:   TokenNumber,
-					Number: -2,
-				},
-				{
-					Type:     TokenOperator,
-					Operator: "*",
-				},
-				{
-					Type:   TokenNumber,
-					Number: -32.2,
-				},
+				UnOp("-"),
+				Num(2),
+				Op("*"),
+				UnOp("-"),
+				Num(32.2),
 			},
 		},
 		{
 			expr: "-2*32.2",
 			expected: []*Token{
-				{
-					Type:   TokenNumber,
-					Number: -2,
-				},
-				{
-					Type:     TokenOperator,
-					Operator: "*",
-				},
-				{
-					Type:   TokenNumber,
-					Number: 32.2,
-				},
+				UnOp("-"),
+				Num(2),
+				Op("*"),
+				Num(32.2),
 			},
 		},
 		{
@@ -80,6 +65,7 @@ func TestTokenizer(t *testing.T) {
 					Type:     TokenOperator,
 					Operator: "+",
 				},
+				UnOp("+"),
 				{
 					Type:   TokenNumber,
 					Number: 2.2,
@@ -101,9 +87,10 @@ func TestTokenizer(t *testing.T) {
 		{
 			expr: "  -92.2    */88-(   ( +1.2 ) -2.1    ",
 			expected: []*Token{
+				UnOp("-"),
 				{
 					Type:   TokenNumber,
-					Number: -92.2,
+					Number: 92.2,
 				},
 				{
 					Type:     TokenOperator,
@@ -129,6 +116,7 @@ func TestTokenizer(t *testing.T) {
 					Type:     TokenOperator,
 					Operator: "(",
 				},
+				UnOp("+"),
 				{
 					Type:   TokenNumber,
 					Number: 1.2,
@@ -137,9 +125,10 @@ func TestTokenizer(t *testing.T) {
 					Type:     TokenOperator,
 					Operator: ")",
 				},
+				Op("-"),
 				{
 					Type:   TokenNumber,
-					Number: -2.1,
+					Number: 2.1,
 				},
 			},
 		},
@@ -147,7 +136,7 @@ func TestTokenizer(t *testing.T) {
 		{
 			expr: "/1 + -1-(1)",
 			expected: []*Token{
-				Op("/"), Num(1), Op("+"), Num(-1), Op("-"), Op("("), Num(1), Op(")"),
+				Op("/"), Num(1), Op("+"), UnOp("-"), Num(1), Op("-"), Op("("), Num(1), Op(")"),
 			},
 		},
 		{

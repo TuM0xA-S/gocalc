@@ -1,6 +1,7 @@
 package gocalc
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -95,12 +96,90 @@ func TestInfixToPostfix(t *testing.T) {
 				Num(2), Var("abc"), Op("*"), Num(4), Op("*"),
 			},
 		},
+		{
+			input: []*Token{
+				UnOp("-"), Num(2),
+			},
+			output: []*Token{
+				Num(2), UnOp("-"),
+			},
+		},
+		{
+			input: []*Token{
+				UnOp("-"), UnOp("-"), Num(2),
+			},
+			output: []*Token{
+				Num(2), UnOp("-"), UnOp("-"),
+			},
+		},
+		{
+			input: []*Token{
+				Num(2), Op("-"), UnOp("-"), Num(2),
+			},
+			output: []*Token{
+				Num(2), Num(2), UnOp("-"), Op("-"),
+			},
+		},
+		{
+			input: []*Token{
+				UnOp("-"), Op("("), UnOp("+"), Num(2), Op(")"),
+			},
+			output: []*Token{
+				Num(2), UnOp("+"), UnOp("-"),
+			},
+		},
+		{
+			input: []*Token{
+				UnOp("-"), Op("("), Num(3), Op("*"), Num(2), Op(")"),
+			},
+			output: []*Token{
+				Num(3), Num(2), Op("*"), UnOp("-"),
+			},
+		},
+		{
+			input: []*Token{
+				UnOp("-"), Op("("), UnOp("-"), Num(3), Op("*"), UnOp("-"), Num(2), Op(")"),
+			},
+			output: []*Token{
+				Num(3), UnOp("-"), Num(2), UnOp("-"), Op("*"), UnOp("-"),
+			},
+		},
+		{
+			input: []*Token{
+				UnOp("+"), UnOp("+"), Op("("), UnOp("+"), UnOp("-"), Num(1), Op(")"),
+			},
+			output: []*Token{
+				Num(1), UnOp("-"), UnOp("+"), UnOp("+"), UnOp("+"),
+			},
+		},
 	}
 	for _, test := range tests {
 		actualOutput, err := ir.infixToPostfix(test.input)
-		ass.NoError(err)
-		ass.Equal(test.output, actualOutput)
+		expr := buildExprFromTokens(test.input)
+		ass.NoError(err, "%#v", expr)
+		act := buildExprFromTokens(actualOutput)
+		ass.Equal(test.output, actualOutput, "exp=%s act=%s", expr, act)
 	}
+}
+
+func buildExprFromTokens(tokens []*Token) (res string) {
+	for _, tok := range tokens {
+		if tok.Type == TokenNumber {
+			res += fmt.Sprint(tok.Number)
+		}
+		if tok.Type == TokenOperator {
+			op := tok.Operator
+			if op[0] == 'u' {
+				op = op[1:]
+			}
+			res += fmt.Sprint(op)
+		}
+		if tok.Type == TokenVariable {
+			res += fmt.Sprint(tok.Variable)
+		}
+	}
+
+	return
 }
 
 func TestInfixToPostfixErrors(t *testing.T) {

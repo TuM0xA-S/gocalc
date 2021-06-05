@@ -55,6 +55,24 @@ func TestCalculatePostfix(t *testing.T) {
 			},
 			answer: 125,
 		},
+		{
+			input: []*Token{
+				Var("x"), UnOp("-"),
+			},
+			answer: -5,
+		},
+		{
+			input: []*Token{
+				Num(3), Num(5), Op("-"), UnOp("-"),
+			},
+			answer: 2,
+		},
+		{
+			input: []*Token{
+				Num(3), Num(5), Op("-"), UnOp("-"), UnOp("+"), Num(-2), Op("/"),
+			},
+			answer: -1,
+		},
 	}
 
 	ass := assert.New(t)

@@ -27,6 +27,11 @@ func Op(op string) *Token {
 	return &Token{Type: TokenOperator, Operator: op}
 }
 
+// UnOp creates unary operator token
+func UnOp(op string) *Token {
+	return &Token{Type: TokenOperator, Operator: "u" + op}
+}
+
 // Num creates number token
 func Num(num float64) *Token {
 	return &Token{Type: TokenNumber, Number: num}
@@ -47,8 +52,9 @@ type Tokenizer interface {
 }
 
 type tokenizer struct {
-	data string
-	pos  int
+	data      string
+	pos       int
+	prevToken *Token
 }
 
 // ParseNumber parses float64
@@ -58,18 +64,11 @@ func ParseNumber(s string) (num float64, pos int) {
 	if len(s) == 0 {
 		return 0, 0
 	}
-	sign := float64(1)
-	if s[0] == '+' {
-		pos++
-	} else if s[0] == '-' {
-		pos++
-		sign = -1
-	}
 	numLen := 0
 	for pos < len(s) && s[pos] >= '0' && s[pos] <= '9' {
 		numLen++
 		digit := s[pos]
-		num = num*10 + sign*float64(digit-48)
+		num = num*10 + float64(digit-48)
 		pos++
 	}
 
@@ -85,7 +84,7 @@ func ParseNumber(s string) (num float64, pos int) {
 	k := 0.1
 	for pos < len(s) && s[pos] >= '0' && s[pos] <= '9' {
 		digit := s[pos]
-		num = num + k*sign*float64(digit-48)
+		num = num + k*float64(digit-48)
 		k /= 10
 		pos++
 	}
@@ -111,7 +110,10 @@ func ParseIdentifier(s string) (identifier string, pos int) {
 	return s[:pos], pos
 }
 
-func (t *tokenizer) NextToken() (*Token, error) {
+func (t *tokenizer) NextToken() (tok *Token, err error) {
+	defer func() {
+		t.prevToken = tok
+	}()
 	for t.pos < len(t.data) && t.data[t.pos] == ' ' {
 		t.pos++
 	}
@@ -121,19 +123,29 @@ func (t *tokenizer) NextToken() (*Token, error) {
 	num, cnt := ParseNumber(t.data[t.pos:])
 	if cnt > 0 {
 		t.pos += cnt
-		return &Token{Type: TokenNumber, Number: num}, nil
+		return Num(num), nil
 	}
 
 	op := string(t.data[t.pos])
-	if strings.Contains("+-/*()=", op) {
+	if strings.Contains("+-", op) {
 		t.pos++
-		return &Token{Type: TokenOperator, Operator: op}, nil
+		if t.prevToken != nil && (t.prevToken.Type == TokenVariable ||
+			t.prevToken.Type == TokenNumber ||
+			t.prevToken.Operator == ")") {
+
+			return Op(op), nil
+		}
+		return UnOp(op), nil
+	}
+	if strings.Contains("/*()=", op) {
+		t.pos++
+		return Op(op), nil
 	}
 
 	identifier, cnt := ParseIdentifier(t.data[t.pos:])
 	if identifier != "" {
 		t.pos += cnt
-		return &Token{Type: TokenVariable, Variable: identifier}, nil
+		return Var(identifier), nil
 	}
 	return nil, fmt.Errorf("bad token at %v", t.pos)
 
