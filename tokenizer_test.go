@@ -179,6 +179,12 @@ func TestTokenizer(t *testing.T) {
 				Var("a"), Op("="), Num(2), Op("+"), Num(2),
 			},
 		},
+		{
+			expr: "@sum = (a, b): a + b", // function
+			expected: []*Token{
+				Func("sum"), Op("="), Op("("), Var("a"), Delim(","), Var("b"), Op(")"), Delim(":"), Var("a"), Op("+"), Var("b"),
+			},
+		},
 	}
 
 	for _, test := range tests {

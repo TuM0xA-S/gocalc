@@ -12,6 +12,12 @@ func TestCalculatePostfix(t *testing.T) {
 			"x": 5,
 			"y": 10.5,
 		},
+		funcs: map[string]*function{
+			"foo": {
+				params: []string{"a"},
+				body:   []*Token{UnOp("-"), Var("a"), Op("*"), Num(2)},
+			},
+		},
 	}
 	type test struct {
 		input  []*Token
@@ -72,6 +78,24 @@ func TestCalculatePostfix(t *testing.T) {
 				Num(3), Num(5), Op("-"), UnOp("-"), UnOp("+"), Num(-2), Op("/"),
 			},
 			answer: -1,
+		},
+		{
+			input: []*Token{
+				Num(3), Func("foo"),
+			},
+			answer: -6,
+		},
+		{
+			input: []*Token{
+				Num(3), Num(2), Op("+"), Func("foo"),
+			},
+			answer: -10,
+		},
+		{
+			input: []*Token{
+				Num(3), Num(2), Op("+"), Num(5), Op("/"), Func("foo"), UnOp("-"),
+			},
+			answer: 2,
 		},
 	}
 

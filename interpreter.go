@@ -2,6 +2,7 @@ package gocalc
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io"
 )
@@ -10,6 +11,7 @@ import (
 type Interpreter struct {
 	scn       bufio.Scanner
 	vars      map[string]float64
+	funcs     map[string]*function
 	verbose   bool
 	precision int
 }
@@ -18,6 +20,7 @@ type Interpreter struct {
 func NewInterpreter(verbose bool, precision int) *Interpreter {
 	return &Interpreter{
 		vars:      map[string]float64{},
+		funcs:     map[string]*function{},
 		verbose:   verbose,
 		precision: precision,
 	}
@@ -62,7 +65,16 @@ func (ir *Interpreter) ProcessInstruction(input string) string {
 	tokenizer := NewStringTokenizer(input)
 	tokens, err := tokenizer.Tokens()
 	if len(tokens) >= 2 && tokens[1].Operator == "=" {
-		if err := ir.processAssignment(tokens); err != nil {
+		var err error
+		switch tokens[0].Type {
+		case TokenVariable:
+			err = ir.processAssignment(tokens)
+		case TokenFunction:
+			err = ir.processFunctionDeclaration(tokens)
+		default:
+			err = errors.New("invalid assignment")
+		}
+		if err != nil {
 			return ir.printError(err)
 		}
 		return ""

@@ -29,7 +29,13 @@ func (ir *Interpreter) infixToPostfix(input []*Token) ([]*Token, error) {
 		switch tok.Type {
 		case TokenNumber, TokenVariable:
 			output = append(output, tok)
-		case TokenOperator:
+		case TokenDelimiter:
+			for len(stack) > 0 && stack[len(stack)-1].Operator != "(" {
+				op := stack[len(stack)-1]
+				stack = stack[:len(stack)-1]
+				output = append(output, op)
+			}
+		case TokenOperator, TokenFunction:
 			if tok.Operator == "(" {
 				stack = append(stack, tok)
 				break
@@ -46,9 +52,13 @@ func (ir *Interpreter) infixToPostfix(input []*Token) ([]*Token, error) {
 				if op == nil || op.Operator != "(" {
 					return nil, errors.New("parens not matching")
 				}
+				if len(stack) > 0 && stack[len(stack)-1].Type == TokenFunction {
+					output = append(output, stack[len(stack)-1])
+					stack = stack[:len(stack)-1]
+				}
 				break
 			}
-			if !isUnary(tok) {
+			if !isUnary(tok) && tok.Type != TokenFunction {
 				for len(stack) > 0 && stack[len(stack)-1].Operator != "(" &&
 					opPriority[tok.Operator] <= opPriority[stack[len(stack)-1].Operator] {
 
@@ -65,7 +75,7 @@ func (ir *Interpreter) infixToPostfix(input []*Token) ([]*Token, error) {
 
 	for i := range stack {
 		op := stack[len(stack)-1-i]
-		if op.Operator == "(" {
+		if op.Operator == "(" || op.Type == TokenFunction {
 			return nil, errors.New("parens not matching")
 		}
 		output = append(output, op)

@@ -11,15 +11,19 @@ import (
 const (
 	TokenNumber = iota
 	TokenOperator
+	TokenFunction
 	TokenVariable
+	TokenDelimiter
 )
 
 // Token (can be one of Token types)
 type Token struct {
-	Type     int
-	Operator string
-	Number   float64
-	Variable string
+	Type      int
+	Operator  string
+	Number    float64
+	Variable  string
+	Function  string
+	Delimiter string
 }
 
 // Op creates operator token
@@ -40,6 +44,16 @@ func Num(num float64) *Token {
 // Var creates variable token
 func Var(name string) *Token {
 	return &Token{Type: TokenVariable, Variable: name}
+}
+
+// Func creates function token
+func Func(name string) *Token {
+	return &Token{Type: TokenFunction, Function: name}
+}
+
+// Delim creates delimiter token
+func Delim(delim string) *Token {
+	return &Token{Type: TokenDelimiter, Delimiter: delim}
 }
 
 // EOF error
@@ -141,11 +155,22 @@ func (t *tokenizer) NextToken() (tok *Token, err error) {
 		t.pos++
 		return Op(op), nil
 	}
-
+	if op == "," || op == ":" {
+		t.pos++
+		return Delim(op), nil
+	}
+	isfunc := false
+	if op == "@" {
+		isfunc = true
+		t.pos++
+	}
 	identifier, cnt := ParseIdentifier(t.data[t.pos:])
 	if identifier != "" {
 		t.pos += cnt
-		return Var(identifier), nil
+		if !isfunc {
+			return Var(identifier), nil
+		}
+		return Func(identifier), nil
 	}
 	return nil, fmt.Errorf("bad token at %v", t.pos)
 

@@ -26,9 +26,6 @@ func (ir *Interpreter) calculatePostfix(input []*Token) (float64, error) {
 			stack = append(stack, val)
 			continue
 		}
-		if tok.Type != TokenOperator {
-			return 0, errors.New("unknown token type")
-		}
 		if isUnary(tok) {
 			if len(stack) < 1 {
 				return 0, errors.New("not enough operands")
@@ -37,6 +34,29 @@ func (ir *Interpreter) calculatePostfix(input []*Token) (float64, error) {
 				stack[len(stack)-1] *= -1
 			}
 			continue
+		}
+		if tok.Type == TokenFunction {
+			name := tok.Function
+			fn, ok := ir.funcs[name]
+			if !ok {
+				return 0, errors.New("unknown function")
+			}
+
+			if len(stack) < len(fn.params) {
+				return 0, errors.New("not enougn params to call function")
+			}
+
+			args := stack[len(stack)-len(fn.params):]
+			stack = stack[:len(stack)-len(fn.params)]
+			res, err := fn.call(args)
+			if err != nil {
+				return 0, err
+			}
+			stack = append(stack, res)
+			continue
+		}
+		if tok.Type != TokenOperator {
+			return 0, errors.New("unknown token type")
 		}
 		if len(stack) < 2 {
 			return 0, errors.New("not enough operands")

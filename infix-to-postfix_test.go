@@ -30,8 +30,7 @@ func TestInfixToPostfix(t *testing.T) {
 			},
 			output: []*Token{
 				Num(1), Num(2), Num(3), Op("*"), Op("+"),
-			},
-		},
+			}},
 		{
 			input: []*Token{
 				Op("("), Num(1), Op("+"), Num(2), Op(")"), Op("*"), Num(3),
@@ -152,13 +151,39 @@ func TestInfixToPostfix(t *testing.T) {
 				Num(1), UnOp("-"), UnOp("+"), UnOp("+"), UnOp("+"),
 			},
 		},
+		{
+			input: []*Token{
+				Func("a"), Op("("), Num(2), Op(")"),
+			},
+			output: []*Token{
+				Num(2), Func("a"),
+			},
+		},
+		{
+			input: []*Token{
+				Func("abc"), Op("("), Num(2), Op("+"), Num(2), Delim(","), UnOp("-"), Num(3), Op(")"),
+			},
+			output: []*Token{
+				Num(2), Num(2), Op("+"), Num(3), UnOp("-"), Func("abc"),
+			},
+		},
+		{
+			input: []*Token{
+				Num(10), Op("*"), Func("abc"), Op("("), Num(2), Op("+"), Num(2), Delim(","),
+				UnOp("-"), Num(3), Op("*"), Num(8), Op(")"), Op("+"), Num(22),
+			},
+			output: []*Token{
+				Num(10), Num(2), Num(2), Op("+"), Num(3), UnOp("-"), Num(8), Op("*"), Func("abc"), Op("*"), Num(22), Op("+"),
+			},
+		},
 	}
 	for _, test := range tests {
 		actualOutput, err := ir.infixToPostfix(test.input)
 		expr := buildExprFromTokens(test.input)
 		ass.NoError(err, "%#v", expr)
 		act := buildExprFromTokens(actualOutput)
-		ass.Equal(test.output, actualOutput, "exp=%s act=%s", expr, act)
+		exp := buildExprFromTokens(test.output)
+		ass.Equal(test.output, actualOutput, "exp=%s act=%s", exp, act)
 	}
 }
 
@@ -177,6 +202,13 @@ func buildExprFromTokens(tokens []*Token) (res string) {
 		if tok.Type == TokenVariable {
 			res += fmt.Sprint(tok.Variable)
 		}
+		if tok.Type == TokenFunction {
+			res += fmt.Sprint(tok.Function)
+		}
+		if tok.Type == TokenDelimiter {
+			res += fmt.Sprint(tok.Delimiter)
+		}
+		res += " "
 	}
 
 	return
