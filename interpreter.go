@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
+
+	"github.com/fiorix/go-readline"
 )
 
 // Interpreter interprets calculator commands
@@ -14,6 +16,7 @@ type Interpreter struct {
 	funcs     map[string]*function
 	verbose   bool
 	precision int
+	prevLine  *string
 }
 
 // NewInterpreter from input to output
@@ -28,18 +31,22 @@ func NewInterpreter(verbose bool, precision int) *Interpreter {
 
 // Start interpreting
 func (ir *Interpreter) Start(input io.Reader, output io.Writer) error {
-	scn := bufio.NewScanner(input)
+	prompt := ir.printPrompt()
 	for {
-		fmt.Fprint(output, ir.printPrompt())
-		if !scn.Scan() {
-			break
-		}
-		if res := ir.ProcessInstruction(scn.Text()); res != "" {
-			fmt.Fprintln(output, res)
+		line := readline.Readline(&prompt)
+		switch {
+		case line == nil:
+			return nil
+		case *line != "":
+			if ir.prevLine == nil || *ir.prevLine != *line {
+				readline.AddHistory(*line)
+			}
+			if res := ir.ProcessInstruction(*line); res != "" {
+				fmt.Fprintln(output, res)
+			}
+			ir.prevLine = line
 		}
 	}
-
-	return scn.Err()
 }
 
 func (ir *Interpreter) printError(err error) string {
