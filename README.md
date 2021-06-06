@@ -8,7 +8,7 @@
 * [x] parser upgraded to work with unary operators
 * [x] simple functions (one line formulas, without subcalls)
 * [ ] script mode, options
-* [ ] uses readline library(interactive editing)
+* [x] uses readline library(interactive editing)
 * [ ] enhanced error handling with indication of problem position in input
 * [ ] optimize function expressions
 
@@ -26,12 +26,20 @@
 * identifier: starts with letter, can consist of letters and digits(case-sensetive)
 * number: floating point number (dot as fraction separator)
 * variable:
-  * assignment: `var = 2 + 2` variable `var` with value 4
-  * usage: `3 * var` => 12
+  * variable_name: identifier
+  * assignment: `varable_name = expression` variable `variable_name` with value of `expression`
+    * example: `var = 2 * 2` variable `var` with value 4
+  * usage: `variable_name` => gives value of variable `identifier`
+    * example: `var` => 6
+
 * function:
-  * declaration: `@func = (a, b): 2 * a + b` function `@func` with two parameters
-  * usage: `@func(3, 5)` => 11
+  * function_name: @identifier
+  * declaration: `function_name = (variable_name [,variable_name]): expression` function with name `function_name` with zero or more parameters(separated with comma), that used for calculate `expression`
+    * example: @foo = (a, b): 2 * a - b
+  * usage: `function_name(expression [,expression])` call function
+    * example: @foo(4 - 1, 2)
 * expression: consists of numbers, operators, function calls, variables
+  * example -(a - @bar(1, (2 + c) * b)) * 5 - d / (100 - 1)
 * operators:
   * unary: `+-`
   * binary: `+-/*`
