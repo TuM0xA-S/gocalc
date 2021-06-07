@@ -2,7 +2,6 @@ package gocalc
 
 import (
 	"errors"
-	"fmt"
 )
 
 // calculatePostfix calculates expression in postfix notation
@@ -21,14 +20,14 @@ func (ir *Interpreter) calculatePostfix(input []*Token) (float64, error) {
 		if tok.Type == TokenVariable {
 			val, ok := ir.vars[tok.Variable]
 			if !ok {
-				return 0, fmt.Errorf("unknow variable: %v", tok.Variable)
+				return 0, newIndexedError(tok.Pos, "unknown variable: %v", tok.Variable)
 			}
 			stack = append(stack, val)
 			continue
 		}
 		if isUnary(tok) {
 			if len(stack) < 1 {
-				return 0, errors.New("not enough operands")
+				return 0, newIndexedError(tok.Pos, "not enough operands for %s", tok.Operator[1:])
 			}
 			if tok.Operator == "u-" {
 				stack[len(stack)-1] *= -1
@@ -39,11 +38,11 @@ func (ir *Interpreter) calculatePostfix(input []*Token) (float64, error) {
 			name := tok.Function
 			fn, ok := ir.funcs[name]
 			if !ok {
-				return 0, errors.New("unknown function")
+				return 0, newIndexedError(tok.Pos, "unknown function @%s", tok.Function)
 			}
 
 			if len(stack) < len(fn.params) {
-				return 0, errors.New("not enougn params to call function")
+				return 0, newIndexedError(tok.Pos, "not enougn params to call function @%s", tok.Function)
 			}
 
 			args := stack[len(stack)-len(fn.params):]
@@ -56,10 +55,10 @@ func (ir *Interpreter) calculatePostfix(input []*Token) (float64, error) {
 			continue
 		}
 		if tok.Type != TokenOperator {
-			return 0, errors.New("unknown token type")
+			return 0, newIndexedError(tok.Pos, "unknown token type")
 		}
 		if len(stack) < 2 {
-			return 0, errors.New("not enough operands")
+			return 0, newIndexedError(tok.Pos, "not enough operands for %s", tok.Operator)
 		}
 		b := stack[len(stack)-1]
 		a := stack[len(stack)-2]
@@ -74,12 +73,12 @@ func (ir *Interpreter) calculatePostfix(input []*Token) (float64, error) {
 		case "/":
 			stack = append(stack, a/b)
 		default:
-			return 0, errors.New("unknown operator")
+			return 0, newIndexedError(tok.Pos, "unknown operator %s", tok.Operator)
 		}
 	}
 
 	if len(stack) > 1 {
-		return 0, errors.New("not enough operators")
+		return 0, errors.New("not enough operators to calculate result")
 	}
 
 	return stack[0], nil

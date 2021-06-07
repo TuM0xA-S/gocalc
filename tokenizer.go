@@ -1,7 +1,6 @@
 package gocalc
 
 import (
-	"fmt"
 	"io"
 	"strings"
 	"unicode"
@@ -18,6 +17,7 @@ const (
 
 // Token (can be one of Token types)
 type Token struct {
+	Pos       int // position in input
 	Type      int
 	Operator  string
 	Number    float64
@@ -125,15 +125,16 @@ func ParseIdentifier(s string) (identifier string, pos int) {
 }
 
 func (t *tokenizer) NextToken() (tok *Token, err error) {
-	defer func() {
-		t.prevToken = tok
-	}()
 	for t.pos < len(t.data) && t.data[t.pos] == ' ' {
 		t.pos++
 	}
 	if t.pos >= len(t.data) {
 		return nil, EOF
 	}
+	defer func(pos int) {
+		tok.Pos = pos
+		t.prevToken = tok
+	}(t.pos)
 	num, cnt := ParseNumber(t.data[t.pos:])
 	if cnt > 0 {
 		t.pos += cnt
@@ -172,7 +173,7 @@ func (t *tokenizer) NextToken() (tok *Token, err error) {
 		}
 		return Func(identifier), nil
 	}
-	return nil, fmt.Errorf("bad token at %v", t.pos)
+	return nil, indexedError{t.pos, "bad token"}
 
 }
 

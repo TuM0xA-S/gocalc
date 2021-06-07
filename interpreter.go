@@ -1,7 +1,6 @@
 package gocalc
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
 	"io"
@@ -11,12 +10,24 @@ import (
 
 // Interpreter interprets calculator commands
 type Interpreter struct {
-	scn       bufio.Scanner
 	vars      map[string]float64
 	funcs     map[string]*function
 	verbose   bool
 	precision int
 	prevLine  *string
+}
+
+type indexedError struct {
+	index int
+	msg   string
+}
+
+func newIndexedError(index int, msg string, args ...interface{}) indexedError {
+	return indexedError{index, fmt.Sprintf(msg, args...)}
+}
+
+func (ie indexedError) Error() string {
+	return fmt.Sprintf("at index %d: %s", ie.index, ie.msg)
 }
 
 // NewInterpreter from input to output
@@ -71,6 +82,9 @@ func (ir *Interpreter) printResult(res float64) string {
 func (ir *Interpreter) ProcessInstruction(input string) string {
 	tokenizer := NewStringTokenizer(input)
 	tokens, err := tokenizer.Tokens()
+	if err != nil {
+		return ir.printError(err)
+	}
 	if len(tokens) >= 2 && tokens[1].Operator == "=" {
 		var err error
 		switch tokens[0].Type {

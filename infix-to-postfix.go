@@ -1,7 +1,6 @@
 package gocalc
 
 import (
-	"errors"
 	"strings"
 )
 
@@ -50,7 +49,7 @@ func (ir *Interpreter) infixToPostfix(input []*Token) ([]*Token, error) {
 					output = append(output, op)
 				}
 				if op == nil || op.Operator != "(" {
-					return nil, errors.New("parens not matching")
+					return nil, newIndexedError(tok.Pos, "parens not matching")
 				}
 				if len(stack) > 0 && stack[len(stack)-1].Type == TokenFunction {
 					output = append(output, stack[len(stack)-1])
@@ -69,14 +68,14 @@ func (ir *Interpreter) infixToPostfix(input []*Token) ([]*Token, error) {
 			}
 			stack = append(stack, tok)
 		default:
-			return nil, errors.New("unknown token type")
+			return nil, newIndexedError(tok.Pos, "unknown token type")
 		}
 	}
 
 	for i := range stack {
 		op := stack[len(stack)-1-i]
 		if op.Operator == "(" || op.Type == TokenFunction {
-			return nil, errors.New("parens not matching")
+			return nil, newIndexedError(op.Pos, "parens not matching")
 		}
 		output = append(output, op)
 	}
