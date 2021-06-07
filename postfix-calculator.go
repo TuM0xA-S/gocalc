@@ -49,7 +49,7 @@ func (ir *Interpreter) calculatePostfix(input []*Token) (float64, error) {
 			stack = stack[:len(stack)-len(fn.params)]
 			res, err := fn.call(args)
 			if err != nil {
-				return 0, err
+				return 0, newIndexedError(tok.Pos, "call @%s: %v", name, err)
 			}
 			stack = append(stack, res)
 			continue

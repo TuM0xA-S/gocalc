@@ -132,6 +132,9 @@ func (t *tokenizer) NextToken() (tok *Token, err error) {
 		return nil, EOF
 	}
 	defer func(pos int) {
+		if tok == nil {
+			return
+		}
 		tok.Pos = pos
 		t.prevToken = tok
 	}(t.pos)
