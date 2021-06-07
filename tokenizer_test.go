@@ -220,6 +220,14 @@ func TestTokenizer(t *testing.T) {
 			if !ass.Equal(tokExp.Variable, tokAct.Variable) {
 				break
 			}
+
+			if !ass.Equal(tokExp.Function, tokAct.Function) {
+				break
+			}
+
+			if !ass.Equal(tokExp.Command, tokAct.Command) {
+				break
+			}
 			ok = true
 		}
 

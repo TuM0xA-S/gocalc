@@ -1,7 +1,6 @@
 package gocalc
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -185,33 +184,6 @@ func TestInfixToPostfix(t *testing.T) {
 		exp := buildExprFromTokens(test.output)
 		ass.Equal(test.output, actualOutput, "exp=%s act=%s", exp, act)
 	}
-}
-
-func buildExprFromTokens(tokens []*Token) (res string) {
-	for _, tok := range tokens {
-		if tok.Type == TokenNumber {
-			res += fmt.Sprint(tok.Number)
-		}
-		if tok.Type == TokenOperator {
-			op := tok.Operator
-			if op[0] == 'u' {
-				op = op[1:]
-			}
-			res += fmt.Sprint(op)
-		}
-		if tok.Type == TokenVariable {
-			res += fmt.Sprint(tok.Variable)
-		}
-		if tok.Type == TokenFunction {
-			res += fmt.Sprint(tok.Function)
-		}
-		if tok.Type == TokenDelimiter {
-			res += fmt.Sprint(tok.Delimiter)
-		}
-		res += " "
-	}
-
-	return
 }
 
 func TestInfixToPostfixErrors(t *testing.T) {

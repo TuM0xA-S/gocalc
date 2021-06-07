@@ -7,7 +7,7 @@
 * [x] variables
 * [x] parser upgraded to work with unary operators
 * [x] simple functions (one line formulas, without subcalls)
-* [ ] meta commands(show all variables and functions)
+* [x] meta commands(show something and etc...)
 * [ ] script mode, options
 * [x] uses readline library(interactive editing)
 * [ ] autocomplete
@@ -52,10 +52,14 @@
   * binary: `+-/*`
   * parentheses: `()`
 
+* meta command: ;identifier
+  * `;mem` (show existing variables and functions)
+
 * instruction:
   * variable assignment (create variable)
   * function declaration (create function)
   * expression (calculate and print value)
+  * meta command
 
 * interpreter: processes instructions
 

@@ -9,13 +9,15 @@ import (
 func TestFunctionDeclaration(t *testing.T) {
 	ir := NewInterpreter(false, 0)
 	tests := []struct {
-		input    string
+		input    []*Token
 		name     string
 		function *function
 	}{
 		{
-			input: "@a = (): 1",
-			name:  "a",
+			input: []*Token{
+				Func("a"), Op("="), Op("("), Op(")"), Delim(":"), Num(1),
+			},
+			name: "a",
 			function: &function{
 				params: nil,
 				body: []*Token{
@@ -24,8 +26,10 @@ func TestFunctionDeclaration(t *testing.T) {
 			},
 		},
 		{
-			input: "@xyz = (a, b): 2 * a + b",
-			name:  "xyz",
+			input: []*Token{
+				Func("xyz"), Op("="), Op("("), Var("a"), Delim(","), Var("b"), Op(")"), Delim(":"), Num(2), Op("*"), Var("a"), Op("+"), Var("b"),
+			},
+			name: "xyz",
 			function: &function{
 				params: []string{"a", "b"},
 				body: []*Token{
@@ -34,8 +38,10 @@ func TestFunctionDeclaration(t *testing.T) {
 			},
 		},
 		{
-			input: "@neg = (a): -a",
-			name:  "neg",
+			input: []*Token{
+				Func("neg"), Op("="), Op("("), Var("a"), Op(")"), Delim(":"), UnOp("-"), Var("a"),
+			},
+			name: "neg",
 			function: &function{
 				params: []string{"a"},
 				body: []*Token{
@@ -46,7 +52,7 @@ func TestFunctionDeclaration(t *testing.T) {
 	}
 	ass := assert.New(t)
 	for _, test := range tests {
-		ass.Equal("", ir.ProcessInstruction(test.input))
+		ass.NoError(ir.processFunctionDeclaration(test.input))
 		act := ir.funcs[test.name]
 		ass.Equal(test.function, ir.funcs[test.name],
 			"exp(params=%v; body=%v) act(params=%v; body=%v)",

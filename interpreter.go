@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/fiorix/go-readline"
 )
@@ -78,12 +79,44 @@ func (ir *Interpreter) printResult(res float64) string {
 	return fmt.Sprintf("%.*f", ir.precision, res)
 }
 
+// ProcessMetaCommand processes meta command
+func (ir *Interpreter) ProcessMetaCommand(token *Token) (string, error) {
+	if token.Type != TokenMetaCommand {
+		return "", fmt.Errorf("not a meta command")
+	}
+	switch token.Command {
+	case "mem":
+		buf := &strings.Builder{}
+		fmt.Fprintln(buf, "memory:")
+		for k, v := range ir.vars {
+			fmt.Fprintf(buf, "%s\t= %.*f\n", k, ir.precision, v)
+		}
+		for k, v := range ir.funcs {
+			fmt.Fprintf(buf, "@%s\t= %s\n", k, v)
+		}
+		return buf.String(), nil
+	default:
+		return "", newIndexedError(token.Pos, "unknown meta command ;%s", token.Command)
+	}
+
+}
+
 // ProcessInstruction processes instruction
 func (ir *Interpreter) ProcessInstruction(input string) string {
 	tokenizer := NewStringTokenizer(input)
 	tokens, err := tokenizer.Tokens()
 	if err != nil {
 		return ir.printError(err)
+	}
+	if len(tokens) == 0 {
+		return ""
+	}
+	if tokens[0].Type == TokenMetaCommand {
+		res, err := ir.ProcessMetaCommand(tokens[0])
+		if err != nil {
+			return ir.printError(err)
+		}
+		return res
 	}
 	if len(tokens) >= 2 && tokens[1].Operator == "=" {
 		var err error

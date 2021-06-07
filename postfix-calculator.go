@@ -20,14 +20,14 @@ func (ir *Interpreter) calculatePostfix(input []*Token) (float64, error) {
 		if tok.Type == TokenVariable {
 			val, ok := ir.vars[tok.Variable]
 			if !ok {
-				return 0, newIndexedError(tok.Pos, "unknown variable: %v", tok.Variable)
+				return 0, newIndexedError(tok.Pos, "unknown variable: %v", tok)
 			}
 			stack = append(stack, val)
 			continue
 		}
 		if isUnary(tok) {
 			if len(stack) < 1 {
-				return 0, newIndexedError(tok.Pos, "not enough operands for %s", tok.Operator[1:])
+				return 0, newIndexedError(tok.Pos, "not enough operands for %s", tok)
 			}
 			if tok.Operator == "u-" {
 				stack[len(stack)-1] *= -1
@@ -38,18 +38,18 @@ func (ir *Interpreter) calculatePostfix(input []*Token) (float64, error) {
 			name := tok.Function
 			fn, ok := ir.funcs[name]
 			if !ok {
-				return 0, newIndexedError(tok.Pos, "unknown function @%s", tok.Function)
+				return 0, newIndexedError(tok.Pos, "unknown function %s", tok)
 			}
 
 			if len(stack) < len(fn.params) {
-				return 0, newIndexedError(tok.Pos, "not enougn params to call function @%s", tok.Function)
+				return 0, newIndexedError(tok.Pos, "not enougn params to call function %s", tok)
 			}
 
 			args := stack[len(stack)-len(fn.params):]
 			stack = stack[:len(stack)-len(fn.params)]
 			res, err := fn.call(args)
 			if err != nil {
-				return 0, newIndexedError(tok.Pos, "call @%s: %v", name, err)
+				return 0, newIndexedError(tok.Pos, "call %s: %v", tok, err)
 			}
 			stack = append(stack, res)
 			continue
@@ -58,7 +58,7 @@ func (ir *Interpreter) calculatePostfix(input []*Token) (float64, error) {
 			return 0, newIndexedError(tok.Pos, "unknown token type")
 		}
 		if len(stack) < 2 {
-			return 0, newIndexedError(tok.Pos, "not enough operands for %s", tok.Operator)
+			return 0, newIndexedError(tok.Pos, "not enough operands for %s", tok)
 		}
 		b := stack[len(stack)-1]
 		a := stack[len(stack)-2]
@@ -73,7 +73,7 @@ func (ir *Interpreter) calculatePostfix(input []*Token) (float64, error) {
 		case "/":
 			stack = append(stack, a/b)
 		default:
-			return 0, newIndexedError(tok.Pos, "unknown operator %s", tok.Operator)
+			return 0, newIndexedError(tok.Pos, "unknown operator %s", tok)
 		}
 	}
 

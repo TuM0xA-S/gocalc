@@ -1,6 +1,10 @@
 package gocalc
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+	"strings"
+)
 
 type function struct {
 	params []string
@@ -22,6 +26,10 @@ func (f *function) call(args []float64) (float64, error) {
 	}
 
 	return interpreter.calculateExpression(f.body)
+}
+
+func (f *function) String() string {
+	return fmt.Sprintf("(%s): %s", strings.Join(f.params, ", "), buildExprFromTokens(f.body))
 }
 
 func (ir *Interpreter) processFunctionDeclaration(tokens []*Token) error {

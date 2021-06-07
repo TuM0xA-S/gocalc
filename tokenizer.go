@@ -1,6 +1,7 @@
 package gocalc
 
 import (
+	"fmt"
 	"io"
 	"strings"
 	"unicode"
@@ -13,6 +14,7 @@ const (
 	TokenFunction
 	TokenVariable
 	TokenDelimiter
+	TokenMetaCommand
 )
 
 // Token (can be one of Token types)
@@ -24,6 +26,34 @@ type Token struct {
 	Variable  string
 	Function  string
 	Delimiter string
+	Command   string
+}
+
+func (t *Token) String() string {
+	switch t.Type {
+	case TokenNumber:
+		return fmt.Sprint(t.Number)
+
+	case TokenMetaCommand:
+		return ";" + t.Command
+
+	case TokenFunction:
+		return "@" + t.Function
+
+	case TokenVariable:
+		return t.Variable
+
+	case TokenDelimiter:
+		return t.Delimiter
+
+	case TokenOperator:
+		if isUnary(t) {
+			return t.Operator[1:]
+		}
+		return t.Operator
+	}
+
+	return ""
 }
 
 // Op creates operator token
@@ -49,6 +79,11 @@ func Var(name string) *Token {
 // Func creates function token
 func Func(name string) *Token {
 	return &Token{Type: TokenFunction, Function: name}
+}
+
+// Meta creates meta command
+func Meta(name string) *Token {
+	return &Token{Type: TokenMetaCommand, Command: name}
 }
 
 // Delim creates delimiter token
@@ -163,20 +198,29 @@ func (t *tokenizer) NextToken() (tok *Token, err error) {
 		t.pos++
 		return Delim(op), nil
 	}
+	initial := t.pos
 	isfunc := false
+	ismeta := false
 	if op == "@" {
 		isfunc = true
+		t.pos++
+	}
+	if op == ";" {
+		ismeta = true
 		t.pos++
 	}
 	identifier, cnt := ParseIdentifier(t.data[t.pos:])
 	if identifier != "" {
 		t.pos += cnt
-		if !isfunc {
-			return Var(identifier), nil
+		if isfunc {
+			return Func(identifier), nil
 		}
-		return Func(identifier), nil
+		if ismeta {
+			return Meta(identifier), nil
+		}
+		return Var(identifier), nil
 	}
-	return nil, indexedError{t.pos, "bad token"}
+	return nil, indexedError{initial, "bad token"}
 
 }
 
@@ -201,4 +245,24 @@ func NewStringTokenizer(data string) Tokenizer {
 	return &tokenizer{
 		data: data,
 	}
+}
+
+func buildExprFromTokens(tokens []*Token) string {
+	buf := &strings.Builder{}
+	for _, tok := range tokens {
+		if tok.Type == TokenOperator && !isUnary(tok) && !strings.Contains("()", tok.Operator) {
+			fmt.Fprintf(buf, " %s ", tok)
+			continue
+		}
+
+		if tok.Type == TokenDelimiter {
+			fmt.Fprintf(buf, "%s ", tok)
+			continue
+		}
+
+		fmt.Fprint(buf, tok)
+
+	}
+
+	return buf.String()
 }
