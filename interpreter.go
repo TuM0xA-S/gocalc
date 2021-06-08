@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"sort"
 	"strings"
 
 	"github.com/fiorix/go-readline"
@@ -41,9 +42,46 @@ func NewInterpreter(verbose bool, precision int) *Interpreter {
 	}
 }
 
+func (ir *Interpreter) completer(input, line string, start, end int) []string {
+	if len(input) == 0 {
+		return []string{"", "NOTHING TO COMPLETE"}
+	}
+
+	names := []string{}
+	for k := range ir.funcs {
+		k = "@" + k
+		names = append(names, k)
+	}
+	for k := range ir.vars {
+		names = append(names, k)
+	}
+
+	res := []string{}
+	fullmatch := false
+	for _, name := range names {
+		if name == input {
+			fullmatch = true
+		}
+		if strings.HasPrefix(name, input) {
+			res = append(res, name)
+		}
+	}
+	if len(res) == 0 {
+		return []string{"", "NO MATCHES"}
+	}
+	if !(fullmatch && len(res) == 1) {
+		res = append(res, "")
+	}
+	sort.Strings(res)
+	return res
+}
+
 // Start interpreting
 func (ir *Interpreter) Start(input io.Reader, output io.Writer) error {
 	prompt := ir.printPrompt()
+	readline.SetCompletionFunction(ir.completer)
+	readline.SetCompleterDelims(" =\t,:()")
+
 	for {
 		line := readline.Readline(&prompt)
 		switch {

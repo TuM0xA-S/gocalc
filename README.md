@@ -2,16 +2,15 @@
 
 ### features
 * [x] float numbers, basic operators(+, -, *, /, (, ))
-* [x] basic error handling
+* [x] enhanced error handling with indication of problem position in input
 * [x] tokenizer is enough smart to proccess arbitrary formatted expressions
-* [x] variables
 * [x] parser upgraded to work with unary operators
+* [x] variables
 * [x] simple functions (one line formulas, without subcalls)
 * [x] meta commands(show something and etc...)
 * [ ] script mode, options
 * [x] uses readline library(interactive editing)
-* [ ] autocomplete
-* [x] enhanced error handling with indication of problem position in input
+* [x] autocomplete(functions and variables)
 * [ ] optimize(minimize) function expressions
 * [ ] api to interact with interpreter objects from go code
 
@@ -35,7 +34,7 @@
   * assignment: `varable_name = expression` variable `variable_name` with value of `expression`
     * example: `var = 2 * 2` variable `var` with value 4
   * usage: `variable_name` => gives value of variable `variable_name`
-    * example: `var` => 6
+    * example: `var` => 4
 
 * function:
   * function_name: @identifier
