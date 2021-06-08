@@ -1,6 +1,7 @@
 package gocalc
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"io"
@@ -12,11 +13,11 @@ import (
 
 // Interpreter interprets calculator commands
 type Interpreter struct {
-	vars      map[string]float64
-	funcs     map[string]*function
-	verbose   bool
-	precision int
-	prevLine  *string
+	vars        map[string]float64
+	funcs       map[string]*function
+	interactive bool
+	precision   int
+	prevLine    *string
 }
 
 type indexedError struct {
@@ -35,10 +36,10 @@ func (ie indexedError) Error() string {
 // NewInterpreter from input to output
 func NewInterpreter(verbose bool, precision int) *Interpreter {
 	return &Interpreter{
-		vars:      map[string]float64{},
-		funcs:     map[string]*function{},
-		verbose:   verbose,
-		precision: precision,
+		vars:        map[string]float64{},
+		funcs:       map[string]*function{},
+		interactive: verbose,
+		precision:   precision,
 	}
 }
 
@@ -69,7 +70,7 @@ func (ir *Interpreter) completer(input, line string, start, end int) []string {
 	if len(res) == 0 {
 		return []string{"", "NO MATCHES"}
 	}
-	if !(fullmatch && len(res) == 1) {
+	if fullmatch && len(res) > 1 {
 		res = append(res, "")
 	}
 	sort.Strings(res)
@@ -78,32 +79,39 @@ func (ir *Interpreter) completer(input, line string, start, end int) []string {
 
 // Start interpreting
 func (ir *Interpreter) Start(input io.Reader, output io.Writer) error {
-	prompt := ir.printPrompt()
-	readline.SetCompletionFunction(ir.completer)
-	readline.SetCompleterDelims(" =\t,:()")
+	if ir.interactive {
+		prompt := ir.printPrompt()
+		readline.SetCompletionFunction(ir.completer)
+		readline.SetCompleterDelims(" =\t,:()")
 
-	for {
-		line := readline.Readline(&prompt)
-		switch {
-		case line == nil:
-			return nil
-		case *line != "":
-			if ir.prevLine == nil || *ir.prevLine != *line {
-				readline.AddHistory(*line)
+		for {
+			line := readline.Readline(&prompt)
+			switch {
+			case line == nil:
+				return nil
+			case *line != "":
+				if ir.prevLine == nil || *ir.prevLine != *line {
+					readline.AddHistory(*line)
+				}
+				if res := ir.ProcessInstruction(*line); res != "" {
+					fmt.Fprintln(output, res)
+				}
+				ir.prevLine = line
 			}
-			if res := ir.ProcessInstruction(*line); res != "" {
+		}
+	} else {
+		scn := bufio.NewScanner(input)
+		for scn.Scan() {
+			if res := ir.ProcessInstruction(scn.Text()); res != "" {
 				fmt.Fprintln(output, res)
 			}
-			ir.prevLine = line
 		}
+		return scn.Err()
 	}
 }
 
 func (ir *Interpreter) printError(err error) string {
-	if ir.verbose {
-		return fmt.Sprintf("error: %v", err)
-	}
-	return fmt.Sprintf("%v", err)
+	return fmt.Sprintf("error: %v", err)
 }
 
 func (ir *Interpreter) printPrompt() string {
@@ -111,7 +119,7 @@ func (ir *Interpreter) printPrompt() string {
 }
 
 func (ir *Interpreter) printResult(res float64) string {
-	if ir.verbose {
+	if ir.interactive {
 		return fmt.Sprintf("= %.*f", ir.precision, res)
 	}
 	return fmt.Sprintf("%.*f", ir.precision, res)

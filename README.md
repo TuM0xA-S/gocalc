@@ -8,9 +8,10 @@
 * [x] variables
 * [x] simple functions (one line formulas, without subcalls)
 * [x] meta commands(show something and etc...)
-* [ ] script mode, options
+* [x] script mode, options
 * [x] uses readline library(interactive editing)
 * [x] autocomplete(functions and variables)
+* [ ] can create config file with predefined functions and variables
 * [ ] optimize(minimize) function expressions
 * [ ] api to interact with interpreter objects from go code
 
