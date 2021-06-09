@@ -58,11 +58,7 @@ func (ir *Interpreter) completer(input, line string, start, end int) []string {
 	}
 
 	res := []string{}
-	fullmatch := false
 	for _, name := range names {
-		if name == input {
-			fullmatch = true
-		}
 		if strings.HasPrefix(name, input) {
 			res = append(res, name)
 		}
@@ -70,7 +66,7 @@ func (ir *Interpreter) completer(input, line string, start, end int) []string {
 	if len(res) == 0 {
 		return []string{"", "NO MATCHES"}
 	}
-	if fullmatch && len(res) > 1 {
+	if len(res) > 1 {
 		res = append(res, "")
 	}
 	sort.Strings(res)
